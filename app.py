@@ -1,11 +1,13 @@
 import os
 import io
 import base64
+import time
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import google.generativeai as genai
 from PIL import Image
+from analytics import track_visit, track_generation, get_analytics_summary
 
 # Load environment variables
 load_dotenv()
@@ -27,14 +29,49 @@ genai.configure(api_key=GEMINI_API_KEY)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Serve static files
+@app.route('/')
+def index():
+    """Serve the main HTML page"""
+    from flask import send_from_directory
+    return send_from_directory('.', 'index.html')
+
+@app.route('/style.css')
+def styles():
+    """Serve CSS file"""
+    from flask import send_from_directory
+    return send_from_directory('.', 'style.css')
+
+@app.route('/script.js')
+def scripts():
+    """Serve JavaScript file"""
+    from flask import send_from_directory
+    return send_from_directory('.', 'script.js')
+
+@app.route('/favicon.ico')
+def favicon():
+    """Serve favicon - return empty response"""
+    return '', 204
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    # Track visit
+    try:
+        ip_address = request.remote_addr
+        user_agent = request.headers.get('User-Agent')
+        track_visit(ip_address, user_agent)
+    except Exception as e:
+        print(f"Analytics tracking error: {e}")
+    
     return jsonify({'status': 'healthy', 'message': 'Server is running'})
 
 @app.route('/api/generate', methods=['POST'])
 def generate_portrait():
     """Generate metallic portrait with Arabic calligraphy"""
+    start_time = time.time()
+    include_text_flag = False
+    
     try:
         # Check if image and name are provided
         if 'image' not in request.files:
@@ -119,6 +156,14 @@ Technical specifications: High resolution, smooth metallic textures, professiona
                         if mime_type and mime_type.startswith('image/'):
                             # Found the image!
                             img_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
+                            
+                            # Track successful generation
+                            try:
+                                processing_time = time.time() - start_time
+                                track_generation(True, include_text_flag, None, processing_time)
+                            except Exception as e:
+                                print(f"Analytics error: {e}")
+                            
                             return jsonify({
                                 'success': True,
                                 'image': f'data:{mime_type};base64,{img_base64}',
@@ -187,8 +232,28 @@ Technical specifications: High resolution, smooth metallic textures, professiona
                 }), 500
             
     except Exception as e:
+        # Track failed generation
+        try:
+            processing_time = time.time() - start_time
+            track_generation(False, include_text_flag, str(e)[:200], processing_time)
+        except:
+            pass
+        
         print(f"Error: {str(e)}")
         return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+@app.route('/api/analytics', methods=['GET'])
+def analytics():
+    """Get analytics summary - Simple auth with query parameter"""
+    auth_key = request.args.get('key')
+    if auth_key != os.getenv('ANALYTICS_KEY', 'metalise2025'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        stats = get_analytics_summary()
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print("🚀 Starting Arabic Portrait Generator Server...")
