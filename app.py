@@ -2,12 +2,23 @@ import os
 import io
 import base64
 import time
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 import google.generativeai as genai
 from PIL import Image
-from analytics import track_visit, track_generation, get_analytics_summary
+
+# Try to import analytics, but don't crash if it fails
+try:
+    from analytics import track_visit, track_generation, get_analytics_summary
+    ANALYTICS_ENABLED = True
+except Exception as e:
+    print(f"Analytics disabled: {e}")
+    ANALYTICS_ENABLED = False
+    # Dummy functions if analytics fails
+    def track_visit(*args, **kwargs): pass
+    def track_generation(*args, **kwargs): pass
+    def get_analytics_summary(): return {"error": "Analytics not available"}
 
 # Load environment variables
 load_dotenv()
@@ -33,19 +44,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route('/')
 def index():
     """Serve the main HTML page"""
-    from flask import send_from_directory
     return send_from_directory('.', 'index.html')
 
 @app.route('/style.css')
 def styles():
     """Serve CSS file"""
-    from flask import send_from_directory
     return send_from_directory('.', 'style.css')
 
 @app.route('/script.js')
 def scripts():
     """Serve JavaScript file"""
-    from flask import send_from_directory
     return send_from_directory('.', 'script.js')
 
 @app.route('/favicon.ico')
