@@ -27,6 +27,7 @@ def init_database():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             success BOOLEAN,
             include_text BOOLEAN,
+            arabic_name TEXT,
             error_message TEXT,
             processing_time REAL,
             date DATE
@@ -90,7 +91,7 @@ def track_visit(ip_address=None, user_agent=None):
     conn.commit()
     conn.close()
 
-def track_generation(success, include_text=False, error_message=None, processing_time=None):
+def track_generation(success, include_text=False, error_message=None, processing_time=None, arabic_name=None):
     """Track an image generation attempt"""
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -99,9 +100,9 @@ def track_generation(success, include_text=False, error_message=None, processing
     
     # Record generation
     cursor.execute('''
-        INSERT INTO generations (success, include_text, error_message, processing_time, date)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (success, include_text, error_message, processing_time, today))
+        INSERT INTO generations (success, include_text, arabic_name, error_message, processing_time, date)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (success, include_text, arabic_name, error_message, processing_time, today))
     
     # Update daily stats
     if success:
@@ -196,5 +197,34 @@ def get_analytics_summary():
         ]
     }
 
-# Initialize database on import
-init_database()
+def get_recent_generations(limit=20):
+    """Get recent name generations with details"""
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT 
+            arabic_name,
+            timestamp,
+            success,
+            include_text,
+            processing_time
+        FROM generations
+        WHERE arabic_name IS NOT NULL AND arabic_name != ''
+        ORDER BY timestamp DESC
+        LIMIT ?
+    ''', (limit,))
+    
+    generations = cursor.fetchall()
+    conn.close()
+    
+    return [
+        {
+            'arabic_name': row[0],
+            'timestamp': row[1],
+            'success': bool(row[2]),
+            'include_text': bool(row[3]),
+            'processing_time': row[4]
+        }
+        for row in generations
+    ]

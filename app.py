@@ -10,7 +10,7 @@ from PIL import Image
 
 # Try to import analytics, but don't crash if it fails
 try:
-    from analytics import track_visit, track_generation, get_analytics_summary
+    from analytics import track_visit, track_generation, get_analytics_summary, get_recent_generations
     ANALYTICS_ENABLED = True
 except Exception as e:
     print(f"Analytics disabled: {e}")
@@ -19,6 +19,7 @@ except Exception as e:
     def track_visit(*args, **kwargs): pass
     def track_generation(*args, **kwargs): pass
     def get_analytics_summary(): return {"error": "Analytics not available"}
+    def get_recent_generations(): return []
 
 # Load environment variables
 load_dotenv()
@@ -57,9 +58,13 @@ def scripts():
     return send_from_directory('.', 'script.js')
 
 @app.route('/favicon.ico')
+@app.route('/favicon.png')
 def favicon():
-    """Serve favicon - return empty response"""
-    return '', 204
+    """Serve favicon"""
+    try:
+        return send_from_directory('.', 'ico.png')
+    except:
+        return '', 204  # Return empty if file not found
 
 @app.route('/analytics')
 def analytics_dashboard():
@@ -173,7 +178,7 @@ Technical specifications: High resolution, smooth metallic textures, professiona
                             # Track successful generation
                             try:
                                 processing_time = time.time() - start_time
-                                track_generation(True, include_text_flag, None, processing_time)
+                                track_generation(True, include_text_flag, None, processing_time, arabic_name)
                             except Exception as e:
                                 print(f"Analytics error: {e}")
                             
@@ -264,6 +269,8 @@ def analytics():
     
     try:
         stats = get_analytics_summary()
+        recent_gens = get_recent_generations(limit=50)
+        stats['recent_generations'] = recent_gens
         return jsonify(stats)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

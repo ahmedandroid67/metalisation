@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analytics Dashboard - Metalise</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
@@ -360,6 +361,30 @@
                 </div>
             </div>
 
+            <!-- Recent Generations with Names -->
+            <div class="section">
+                <h2 class="section-title">✍️ Recent Names Generated</h2>
+                <div id="no-names"
+                    style="text-align: center; padding: 2rem; color: var(--text-secondary); display: none;">
+                    <p>📝 No names generated yet. Names will appear here when users create portraits.</p>
+                </div>
+                <div style="overflow-x: auto;" id="names-table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Arabic Name</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                                <th>Text Included</th>
+                                <th>Processing Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-names">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div style="text-align: center;">
                 <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh Data</button>
             </div>
@@ -439,6 +464,45 @@
                 `;
                 tbody.innerHTML += row;
             });
+
+            // Recent names
+            const namesTbody = document.getElementById('recent-names');
+            const noNames = document.getElementById('no-names');
+            const namesTableContainer = document.getElementById('names-table-container');
+
+            if (!data.recent_generations || data.recent_generations.length === 0) {
+                noNames.style.display = 'block';
+                namesTableContainer.style.display = 'none';
+            } else {
+                noNames.style.display = 'none';
+                namesTableContainer.style.display = 'block';
+                namesTbody.innerHTML = '';
+
+                data.recent_generations.forEach(gen => {
+                    const timestamp = new Date(gen.timestamp);
+                    const dateStr = timestamp.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    const timeStr = timestamp.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const procTime = gen.processing_time ? gen.processing_time.toFixed(2) + 's' : 'N/A';
+
+                    const row = `
+                        <tr>
+                            <td style="font-size: 1.2rem; font-weight: 600; direction: rtl;">${gen.arabic_name || 'N/A'}</td>
+                            <td>${dateStr} <span style="color: var(--text-secondary);">${timeStr}</span></td>
+                            <td><span class="badge ${gen.success ? 'success' : 'danger'}">${gen.success ? '✓ Success' : '✗ Failed'}</span></td>
+                            <td>${gen.include_text ? 'Yes' : 'No'}</td>
+                            <td>${procTime}</td>
+                        </tr>
+                    `;
+                    namesTbody.innerHTML += row;
+                });
+            }
         }
 
         // Load on page load
