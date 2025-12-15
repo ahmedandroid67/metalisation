@@ -18,6 +18,7 @@ git add .
 git commit -m "Initial commit - Arabic Portrait Generator"
 ```
 
+
 ### 2. Push to GitHub/GitLab
 ```bash
 git remote add origin YOUR_REPO_URL
