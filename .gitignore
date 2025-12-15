@@ -1,0 +1,29 @@
+# Deployment files
+/.env
+/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.venv
+venv/
+ENV/
+env/
+
+# Development
+.DS_Store
+.vscode/
+.idea/
+
+# Uploads
+uploads/
+
+# Temp files
+*.log
+*.swp
+*.swo
+*~
+
+# Node (if using npm)
+node_modules/
