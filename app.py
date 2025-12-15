@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from PIL import Image
 
+
 # Try to import analytics, but don't crash if it fails
 try:
     from analytics import track_visit, track_generation, get_analytics_summary, get_recent_generations
