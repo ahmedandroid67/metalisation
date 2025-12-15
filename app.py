@@ -61,6 +61,11 @@ def favicon():
     """Serve favicon - return empty response"""
     return '', 204
 
+@app.route('/analytics')
+def analytics_dashboard():
+    """Serve analytics dashboard HTML"""
+    return send_from_directory('.', 'analytics_dashboard.html')
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Metalise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0a4d4d 0%, #051a1a 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b8d4dc;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #000000;
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-gradient);
+            z-index: -1;
+        }
+
+        .background-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #e8f4f8, #b8d4dc, #c0c0c0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-sublabel {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .stat-value.green {
+            color: var(--accent-green);
+        }
+
+        .stat-value.cyan {
+            color: var(--accent-cyan);
+        }
+
+        .stat-value.purple {
+            color: var(--accent-purple);
+        }
+
+        .stat-value.red {
+            color: var(--accent-red);
+        }
+
+        .section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .badge.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 0;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            border: 4px solid var(--glass-border);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: var(--accent-red);
+            text-align: center;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 212, 255, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .table {
+                font-size: 0.9rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-gradient"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="title">📊 Analytics Dashboard</h1>
+            <p class="subtitle">Metalise - Arabic Portrait Generator</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading analytics data...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <p id="error-message"></p>
+            <button class="refresh-btn" onclick="loadAnalytics()">Retry</button>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- Today's Stats -->
+            <div class="section">
+                <h2 class="section-title">📅 Today's Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Unique Visitors</div>
+                        <div class="stat-value cyan" id="today-unique"></div>
+                        <div class="stat-sublabel">Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Visits</div>
+                        <div class="stat-value purple" id="today-visits"></div>
+                        <div class="stat-sublabel">Page views</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Successful Generations</div>
+                        <div class="stat-value green" id="today-success"></div>
+                        <div class="stat-sublabel">Images created</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Failed Generations</div>
+                        <div class="stat-value red" id="today-failed"></div>
+                        <div class="stat-sublabel">Errors</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All-Time Stats -->
+            <div class="section">
+                <h2 class="section-title">🌍 All-Time Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Unique Visitors</div>
+                        <div class="stat-value cyan" id="total-unique"></div>
+                        <div class="stat-sublabel">All time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Visits</div>
+                        <div class="stat-value purple" id="total-visits"></div>
+                        <div class="stat-sublabel">All page views</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Generations</div>
+                        <div class="stat-value green" id="total-generations"></div>
+                        <div class="stat-sublabel">Images created</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-value green" id="success-rate"></div>
+                        <div class="stat-sublabel">Percentage</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last 7 Days -->
+            <div class="section">
+                <h2 class="section-title">📈 Last 7 Days</h2>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Visitors</th>
+                                <th>Visits</th>
+                                <th>Success</th>
+                                <th>Failed</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="last-7-days">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = new URLSearchParams(window.location.search).get('key') || 'metalise2025';
+        const API_URL = window.location.origin + '/api/analytics?key=' + API_KEY;
+
+        async function loadAnalytics() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const dashboard = document.getElementById('dashboard');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            dashboard.style.display = 'none';
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                displayAnalytics(data);
+
+                loading.style.display = 'none';
+                dashboard.style.display = 'block';
+            } catch (err) {
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                document.getElementById('error-message').textContent =
+                    '❌ Error loading analytics: ' + err.message;
+            }
+        }
+
+        function displayAnalytics(data) {
+            // Today's stats
+            document.getElementById('today-unique').textContent = data.today.unique_visitors;
+            document.getElementById('today-visits').textContent = data.today.total_visits;
+            document.getElementById('today-success').textContent = data.today.successful_generations;
+            document.getElementById('today-failed').textContent = data.today.failed_generations;
+
+            // Total stats
+            document.getElementById('total-unique').textContent = data.total.unique_visitors;
+            document.getElementById('total-visits').textContent = data.total.visits;
+            document.getElementById('total-generations').textContent = data.total.total_generations;
+
+            // Success rate
+            const successRate = data.total.total_generations > 0
+                ? ((data.total.successful_generations / data.total.total_generations) * 100).toFixed(1)
+                : 0;
+            document.getElementById('success-rate').textContent = successRate + '%';
+
+            // Last 7 days
+            const tbody = document.getElementById('last-7-days');
+            tbody.innerHTML = '';
+
+            data.last_7_days.forEach(day => {
+                const total = (day.successful_generations || 0) + (day.failed_generations || 0);
+                const row = `
+                    <tr>
+                        <td><strong>${day.date}</strong></td>
+                        <td>${day.unique_visitors || 0}</td>
+                        <td>${day.total_visits || 0}</td>
+                        <td><span class="badge success">${day.successful_generations || 0}</span></td>
+                        <td><span class="badge danger">${day.failed_generations || 0}</span></td>
+                        <td>${total}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Load on page load
+        loadAnalytics();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadAnalytics, 30000);
+    </script>
+</body>
+
+</html>
