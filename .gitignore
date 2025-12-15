@@ -11,6 +11,9 @@ venv/
 ENV/
 env/
 
+# Analytics database
+analytics.db
+
 # Development
 .DS_Store
 .vscode/
