@@ -212,32 +212,48 @@ def get_analytics_summary():
 
 def get_recent_generations(limit=20):
     """Get recent name generations with details"""
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        SELECT 
-            arabic_name,
-            timestamp,
-            success,
-            include_text,
-            processing_time
-        FROM generations
-        WHERE arabic_name IS NOT NULL AND arabic_name != ''
-        ORDER BY timestamp DESC
-        LIMIT ?
-    ''', (limit,))
-    
-    generations = cursor.fetchall()
-    conn.close()
-    
-    return [
-        {
-            'arabic_name': row[0],
-            'timestamp': row[1],
-            'success': bool(row[2]),
-            'include_text': bool(row[3]),
-            'processing_time': row[4]
-        }
-        for row in generations
-    ]
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        
+        # Check if arabic_name column exists
+        cursor.execute("PRAGMA table_info(generations)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        if 'arabic_name' not in columns:
+            print("⚠️ arabic_name column not found, returning empty list")
+            conn.close()
+            return []
+        
+        cursor.execute('''
+            SELECT 
+                arabic_name,
+                timestamp,
+                success,
+                include_text,
+                processing_time
+            FROM generations
+            WHERE arabic_name IS NOT NULL AND arabic_name != ''
+            ORDER BY timestamp DESC
+            LIMIT ?
+        ''', (limit,))
+        
+        generations = cursor.fetchall()
+        conn.close()
+        
+        return [
+            {
+                'arabic_name': row[0],
+                'timestamp': row[1],
+                'success': bool(row[2]),
+                'include_text': bool(row[3]),
+                'processing_time': row[4]
+            }
+            for row in generations
+        ]
+    except Exception as e:
+        print(f"❌ Error in get_recent_generations: {e}")
+        return []
+
+# Initialize database on import
+init_database()

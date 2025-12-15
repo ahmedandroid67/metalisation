@@ -269,12 +269,27 @@ def analytics():
         return jsonify({'error': 'Unauthorized'}), 401
     
     try:
+        print("📊 Analytics endpoint called")
         stats = get_analytics_summary()
+        print("✅ Got analytics summary")
+        
         recent_gens = get_recent_generations(limit=50)
+        print(f"✅ Got recent generations: {len(recent_gens)} items")
+        
         stats['recent_generations'] = recent_gens
         return jsonify(stats)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        error_msg = str(e)
+        print(f"❌ Analytics error: {error_msg}")
+        import traceback
+        traceback.print_exc()
+        
+        # Return a more informative error
+        return jsonify({
+            'error': 'Analytics temporarily unavailable',
+            'details': error_msg,
+            'message': 'Please check server logs for details'
+        }), 500
 
 if __name__ == '__main__':
     print("🚀 Starting Arabic Portrait Generator Server...")
