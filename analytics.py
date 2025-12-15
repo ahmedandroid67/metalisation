@@ -47,6 +47,19 @@ def init_database():
     ''')
     
     conn.commit()
+    
+    # Migration: Add arabic_name column if it doesn't exist (for existing databases)
+    try:
+        cursor.execute("PRAGMA table_info(generations)")
+        columns = [column[1] for column in cursor.fetchall()]
+        if 'arabic_name' not in columns:
+            print("📊 Migrating database: adding arabic_name column to generations table")
+            cursor.execute("ALTER TABLE generations ADD COLUMN arabic_name TEXT")
+            conn.commit()
+            print("✅ Migration completed successfully")
+    except Exception as e:
+        print(f"⚠️ Migration note: {e}")
+    
     conn.close()
 
 def track_visit(ip_address=None, user_agent=None):
