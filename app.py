@@ -67,6 +67,11 @@ def favicon():
     except:
         return '', 204  # Return empty if file not found
 
+@app.route('/sample.png')
+def sample_image():
+    """Serve sample image"""
+    return send_from_directory('.', 'sample.png')
+
 @app.route('/analytics')
 def analytics_dashboard():
     """Serve analytics dashboard HTML"""

@@ -19,6 +19,9 @@ const newGenerationBtn = document.getElementById('newGenerationBtn');
 const errorMessage = document.getElementById('errorMessage');
 const errorText = document.getElementById('errorText');
 const errorCloseBtn = document.getElementById('errorCloseBtn');
+const toggleSampleBtn = document.getElementById('toggleSampleBtn');
+const sampleContent = document.getElementById('sampleContent');
+const sampleHeader = document.getElementById('sampleHeader');
 
 // State
 let selectedImage = null;
@@ -31,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupEventListeners() {
+    // Sample section toggle
+    sampleHeader.addEventListener('click', toggleSample);
+
     // Upload area click
     uploadPlaceholder.addEventListener('click', () => {
         imageInput.click();
@@ -64,6 +70,12 @@ function setupEventListeners() {
 
     // Error close
     errorCloseBtn.addEventListener('click', hideError);
+}
+
+// Sample Toggle
+function toggleSample() {
+    sampleContent.classList.toggle('collapsed');
+    toggleSampleBtn.classList.toggle('collapsed');
 }
 
 // File Handling
