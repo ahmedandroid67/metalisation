@@ -25,6 +25,8 @@ except Exception as e:
 # Load environment variables
 load_dotenv()
 
+
+
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
